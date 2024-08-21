@@ -58,19 +58,7 @@ public class UserService : IUserService
 
     public async Task<List<UserResponseDto>> UploadInsertAsync(IFormFile file)
     {
-        if (file == null || file.Length == 0)
-        {
-            throw new Exception("No file uploaded");
-        }
-
-        // Generate a temporary file path
-        var tempFilePath = Path.GetTempFileName();
-
-        // Save the uploaded file to the temporary path
-        using (var stream = new FileStream(tempFilePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
+        var tempFilePath = await GetTempFileName(file);
         var validator = new CreateUserDtoValidator();
 
         // Parse the Excel file
@@ -88,19 +76,7 @@ public class UserService : IUserService
 
     public async Task<List<UserResponseDto>> UploadMergeAsync(IFormFile file)
     {
-        if (file == null || file.Length == 0)
-        {
-            throw new Exception("No file uploaded");
-        }
-
-        // Generate a temporary file path
-        var tempFilePath = Path.GetTempFileName();
-
-        // Save the uploaded file to the temporary path
-        using (var stream = new FileStream(tempFilePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
+        var tempFilePath = await GetTempFileName(file);
         var validator = new UpdateUserBulkDtoValidator();
 
         // Parse the Excel file
@@ -114,5 +90,21 @@ public class UserService : IUserService
         IEnumerable<User> usersEntity = _mapper.Map<User[]>(users);
         usersEntity = await _userRepository.BulkMergeUpload(usersEntity);
         return _mapper.Map<List<UserResponseDto>>(usersEntity);
+    }
+    private async Task<string> GetTempFileName(IFormFile file){
+        if (file == null || file.Length == 0)
+        {
+            throw new Exception("No file uploaded");
+        }
+
+        // Generate a temporary file path
+        var tempFilePath = Path.GetTempFileName();
+
+        // Save the uploaded file to the temporary path
+        using (var stream = new FileStream(tempFilePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+        return tempFilePath;
     }
 }
